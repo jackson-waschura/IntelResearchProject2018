@@ -1,0 +1,39 @@
+		// for SAPI
+#define _ATL_APARTMENT_THREADED
+
+#include <atlbase.h>
+//You may derive a class from CComModule and use it if you want to override something,
+//but do not change the name of _Module
+extern CComModule _Module;
+#include <atlcom.h>
+//#include <stdafx.h>
+#include <sapi.h>
+
+    
+    
+    
+    //printf("Average Of (%d) Stuff: %f, %f, %f\n", count, avgX, avgY, avgZ);
+		ISpVoice * pVoice = NULL;
+
+		// initialize COM for SAPI
+		if (FAILED(::CoInitialize(NULL)))
+			return FALSE;
+
+		// create COM voice object
+		HRESULT hr = CoCreateInstance(CLSID_SpVoice, NULL, CLSCTX_ALL, IID_ISpVoice, (void **)&pVoice);
+		if (SUCCEEDED(hr))
+		{
+			// speak
+			char *object_name = "cat"; // hardcoded for now
+			char *direction = avgX > 0 ? "right" : "left";
+			char *message;
+			sprintf(message, "%s is %.1f meters away, %.1f meters to your %s, and %.1f meters above the ground",
+				object_name, avgZ, avgX, direction, avgY);
+			// hr = pVoice->Speak(L"Hello world", 0, NULL);
+			hr = pVoice->Speak((LPCWSTR) message, 0, NULL);
+			pVoice->Release();
+			pVoice = NULL;
+		}
+
+		::CoUninitialize();
+		return TRUE;
