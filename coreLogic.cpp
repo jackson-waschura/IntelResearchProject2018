@@ -27,27 +27,8 @@ using namespace std;
 using namespace cv;
 using namespace cv::dnn;
 
-const int W = 640;
-const int H = 480;
-const int TARGET_RED = 0xC5;
-const int TARGET_GREEN = 0x1B;
-const int TARGET_BLUE = 0x77;
-const int TARGET_DIST = 90;
-const int TEMP_BUFFER_SIZE = 20;
-
 GLvoid *mask_pixels;
 GLuint gl_handle;
-
-typedef struct Pixel {
-	int x, y;
-	Pixel *nextPixel;
-} Pixel;
-
-typedef struct blob {
-	Pixel *pixels;
-	int size;
-	blob *nextBlob;
-} blob;
 
 int filter_rgb(UINT8 r, UINT8 g, UINT8 b);
 blob *createBlob(int x, int y);
