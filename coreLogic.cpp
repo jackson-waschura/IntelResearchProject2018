@@ -6,7 +6,6 @@
 #include <wchar.h>
 #include <iostream>
 #include <cmath>
-#include "example.hpp"
 #include <opencv2/dnn.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
@@ -22,6 +21,8 @@ extern CComModule _Module;
 #include <atlcom.h>
 //#include <stdafx.h>
 #include <sapi.h>
+#include "example.hpp"
+#include "coreLogic.h"
 
 using namespace std;
 using namespace cv;
