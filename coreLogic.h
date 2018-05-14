@@ -12,9 +12,7 @@ extern CComModule _Module;
 
 const int W = 640;
 const int H = 480;
-const int TARGET_RED = 0xC5;
-const int TARGET_GREEN = 0x1B;
-const int TARGET_BLUE = 0x77;
+const UCHAR TARGET_ID = 15;
 const int TARGET_DIST = 90;
 static int NUM_CLASSES = 21;
 static int S_SIZE = H;

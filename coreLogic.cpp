@@ -99,7 +99,7 @@ int main(int argc, char * argv[]) try
 			}
 		}
 
-		UCHAR networkOutput[H * H * 3];
+		UCHAR networkOutput[H * H];
 		runNetwork(net, networkInput, networkOutput);
 
 		// TODO: Put this into its own file "localization.cpp"??
@@ -107,7 +107,7 @@ int main(int argc, char * argv[]) try
 		blob *blobsHead = NULL, *blobsTail = NULL, *blobsTemp = NULL, *largestBlob = NULL;
 		for (int x = 0; x < H; x++) {
 			for (int y = 0; y < H; y++) {
-				if (networkOutput[3 * (x + y * H)]) {
+				if (networkOutput[x + y * H]) {
 					blobsTemp = createBlob(x, y, networkOutput);
 					if (!blobsTemp) {
 						fprintf(stderr, "ERROR! Out of Memory!");
@@ -141,9 +141,7 @@ int main(int argc, char * argv[]) try
 			pixelsPtr = largestBlob->pixels;
 			count = largestBlob->size;
 			while (pixelsPtr) {
-				((UCHAR *)networkOutput)[3 * (pixelsPtr->x + pixelsPtr->y * H)] = TARGET_RED;
-				((UCHAR *)networkOutput)[3 * (pixelsPtr->x + pixelsPtr->y * H) + 1] = TARGET_GREEN;
-				((UCHAR *)networkOutput)[3 * (pixelsPtr->x + pixelsPtr->y * H) + 2] = TARGET_BLUE;
+				((UCHAR *)networkOutput)[pixelsPtr->x + pixelsPtr->y * H] = TARGET_ID;
 
 				totalX += vertices[pixelsPtr->x + offset + pixelsPtr->y * H].x;
 				totalY += vertices[pixelsPtr->x + offset + pixelsPtr->y * H].y;
@@ -183,7 +181,7 @@ int main(int argc, char * argv[]) try
 		if (SUCCEEDED(hr))
 		{
 			// speak
-			WCHAR *object_name = L"object"; // hardcoded for now
+			WCHAR *object_name = L"person"; // hardcoded for now
 			WCHAR *direction = avgX > 0 ? L"right" : L"left";
 			WCHAR message[100];
 			swprintf(message, sizeof(message), L"The %s is %.1f meters away, %.1f meters to your %s, and %.1f meters above the ground",
@@ -197,11 +195,16 @@ int main(int argc, char * argv[]) try
 
 		::CoUninitialize();
 
-		Mat image(H, H, CV_8UC3, Vec3b(0, 0, 0));
+		Mat image(H, H, CV_8U);
 
-		memcpy(image.data, networkOutput, H * H * 3);
+		for (int i = 0; i < H * H; i++) {
+			image.data[i] = (networkOutput[i] == 0 ? 0 : 255);
+		}
+
+		namedWindow("Mask", WINDOW_AUTOSIZE);
 		imshow("Mask", image);
-		waitKey(2000);
+		waitKey(4000);
+		destroyWindow("Mask");
 	}
 	return EXIT_SUCCESS;
 }
@@ -243,15 +246,13 @@ Pixel *createPixels(int x, int y, int *size, UCHAR *mask) {
 	queueHead->nextPixel = NULL;
 	queueTail = queueHead;
 	headPixel = queueHead;
-	((UCHAR *)mask)[3 * (x + y * H)] = 0;
-	((UCHAR *)mask)[3 * (x + y * H) + 1] = 0;
-	((UCHAR *)mask)[3 * (x + y * H) + 2] = 0;
+	((UCHAR *)mask)[x + y * H] = 0;
 	(*size)++;
 
 	// while there are still undiscovered pixels
 	while (queueHead) {
 		// add pixel to the left of this pixel
-		if (queueHead->x - 1 >= 0 && ((UCHAR *)mask)[3 * ((queueHead->x - 1) + queueHead->y * H)]) {
+		if (queueHead->x - 1 >= 0 && ((UCHAR *)mask)[(queueHead->x - 1) + queueHead->y * H]) {
 			// create new pixel
 			queueTail->nextPixel = (Pixel *)malloc(sizeof(Pixel));
 			if (!queueTail->nextPixel) {
@@ -262,13 +263,11 @@ Pixel *createPixels(int x, int y, int *size, UCHAR *mask) {
 			queueTail->x = queueHead->x - 1;
 			queueTail->y = queueHead->y;
 			queueTail->nextPixel = NULL;
-			((UCHAR *)mask)[3 * (queueTail->x + queueTail->y * H)] = 0;
-			((UCHAR *)mask)[3 * (queueTail->x + queueTail->y * H) + 1] = 0;
-			((UCHAR *)mask)[3 * (queueTail->x + queueTail->y * H) + 2] = 0;
+			((UCHAR *)mask)[queueTail->x + queueTail->y * H] = 0;
 			(*size)++;
 		}
 		// add pixel below this pixel
-		if (queueHead->y + 1 < H && ((UCHAR *)mask)[3 * (queueHead->x + (queueHead->y + 1) * H)]) {
+		if (queueHead->y + 1 < H && ((UCHAR *)mask)[queueHead->x + (queueHead->y + 1) * H]) {
 			// create new pixel
 			queueTail->nextPixel = (Pixel *)malloc(sizeof(Pixel));
 			if (!queueTail->nextPixel) {
@@ -279,13 +278,11 @@ Pixel *createPixels(int x, int y, int *size, UCHAR *mask) {
 			queueTail->x = queueHead->x;
 			queueTail->y = queueHead->y + 1;
 			queueTail->nextPixel = NULL;
-			((UCHAR *)mask)[3 * (queueTail->x + queueTail->y * H)] = 0;
-			((UCHAR *)mask)[3 * (queueTail->x + queueTail->y * H) + 1] = 0;
-			((UCHAR *)mask)[3 * (queueTail->x + queueTail->y * H) + 2] = 0;
+			((UCHAR *)mask)[queueTail->x + queueTail->y * H] = 0;
 			(*size)++;
 		}
 		// add pixel above this pixel
-		if (queueHead->y - 1 >= 0 && ((UCHAR *)mask)[3 * (queueHead->x + (queueHead->y - 1) * H)]) {
+		if (queueHead->y - 1 >= 0 && ((UCHAR *)mask)[queueHead->x + (queueHead->y - 1) * H]) {
 			// create new pixel
 			queueTail->nextPixel = (Pixel *)malloc(sizeof(Pixel));
 			if (!queueTail->nextPixel) {
@@ -296,13 +293,11 @@ Pixel *createPixels(int x, int y, int *size, UCHAR *mask) {
 			queueTail->x = queueHead->x;
 			queueTail->y = queueHead->y - 1;
 			queueTail->nextPixel = NULL;
-			((UCHAR *)mask)[3 * (queueTail->x + queueTail->y * H)] = 0;
-			((UCHAR *)mask)[3 * (queueTail->x + queueTail->y * H) + 1] = 0;
-			((UCHAR *)mask)[3 * (queueTail->x + queueTail->y * H) + 2] = 0;
+			((UCHAR *)mask)[queueTail->x + queueTail->y * H] = 0;
 			(*size)++;
 		}
 		// add pixel to the right of this pixel
-		if (queueHead->x + 1 < H && ((UCHAR *)mask)[3 * ((queueHead->x + 1) + queueHead->y * H)]) {
+		if (queueHead->x + 1 < H && ((UCHAR *)mask)[(queueHead->x + 1) + queueHead->y * H]) {
 			// create new pixel
 			queueTail->nextPixel = (Pixel *)malloc(sizeof(Pixel));
 			if (!queueTail->nextPixel) {
@@ -313,9 +308,7 @@ Pixel *createPixels(int x, int y, int *size, UCHAR *mask) {
 			queueTail->x = queueHead->x + 1;
 			queueTail->y = queueHead->y;
 			queueTail->nextPixel = NULL;
-			((UCHAR *)mask)[3 * (queueTail->x + queueTail->y * H)] = 0;
-			((UCHAR *)mask)[3 * (queueTail->x + queueTail->y * H) + 1] = 0;
-			((UCHAR *)mask)[3 * (queueTail->x + queueTail->y * H) + 2] = 0;
+			((UCHAR *)mask)[queueTail->x + queueTail->y * H] = 0;
 			(*size)++;
 		}
 		queueHead = queueHead->nextPixel;
