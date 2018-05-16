@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <map>
+#include <algorithm>
 
 using namespace std;
 
@@ -44,17 +45,33 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
+// returns string containing the object the user enters
 string parse(std::map<string, int> objects) {
 
+  // put input in object until user decides to quit
   string object;
   do {
+    // prompt user
     std::cout << "Please enter the object you wish to find: ";
-    cin >> object;
+    std::cin >> object;
+    std::transform(object.begin(), object.end(), object.begin(), ::tolower);
 
+    // quit
     if (object == "quit" || object == "q") {
       return std::string();
     }
 
+    // list objects
+    if (object == "list" || object == "l") {
+      std::cout << "Objects available:\n";
+      map<string, int>::iterator itr;
+      for (itr = objects.begin(); itr != objects.end(); itr++) {
+        std::cout << itr->first << endl;
+      }
+      continue;
+    }
+
+    // print help message
     if (object == "help" || object == "h") {
       std::cout << "Usage: <object>\n";
       continue;
@@ -64,6 +81,7 @@ string parse(std::map<string, int> objects) {
     if (objects.find(object) == objects.end()) {
       std::cout << "Unkown object type \"" << object << "\"\n";
     }
+    // found valid object
     else {
       break;
     }
