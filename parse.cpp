@@ -1,55 +1,43 @@
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <map>
 #include <algorithm>
 
-using namespace std;
+#define MAX_LEN 100
 
-string parse(std::map<string, int> objects);
+std::map<std::string, int> objects;
+
+typedef struct Tuple {
+  std::string object;
+  int class_num;
+} Tuple;
+
+Tuple *parse(std::map<std::string, int> objects);
+void print_map_keys(std::map<std::string, int> map);
+void fill_map(std::map<std::string, int> *objects, std::string fname);
 
 int main(int argc, char *argv[]) {
   // initialize objects (using pascal VOC)
-  std::map<std::string, int> objects;
-  objects["aeroplane"] = 1;
-  objects["airplane"] = 1;
-  objects["bicycle"] = 2;
-  objects["bird"] = 3;
-  objects["boat"] = 4;
-  objects["bottle"] = 5;
-  objects["bus"] = 6;
-  objects["car"] = 7;
-  objects["cat"] = 8;
-  objects["chair"] = 9;
-  objects["cow"] = 10;
-  objects["diningtable"] = 11;
-  objects["dog"] = 12;
-  objects["horse"] = 13;
-  objects["motorbike"] = 14;
-  objects["person"] = 15;
-  objects["potted plant"] = 16;
-  objects["sheep"] = 17;
-  objects["sofa"] = 18;
-  objects["train"] = 19;
-  objects["tv"] = 20;
-  objects["monitor"] = 20;
+  fill_map(&objects, "classes.txt");
 
-  string object;
+  Tuple *t;
   do {
-    object = parse(objects);
-    if (object.empty()) {
+    t = parse(objects);
+    if (!t) {
       break;
     }
-    std::cout << "Object " << object << " has class #" << objects[object] << endl;
-  } while (!object.empty());
+    std::cout << "Object " << t->class_num << " has class #" << t->class_num << std::endl;
+  } while (true); 
 
   return 0;
 }
 
-// returns string containing the object the user enters
-string parse(std::map<string, int> objects) {
+// returns std::std::string containing the object the user enters
+Tuple *parse(std::map<std::string, int> objects) {
 
   // put input in object until user decides to quit
-  string object;
+  std::string object;
   do {
     // prompt user
     std::cout << "Please enter the object you wish to find: ";
@@ -58,28 +46,30 @@ string parse(std::map<string, int> objects) {
 
     // quit
     if (object == "quit" || object == "q") {
-      return std::string();
+      std::cout << "Our work is not done...";
+      return NULL;
     }
 
     // list objects
     if (object == "list" || object == "l") {
       std::cout << "Objects available:\n";
-      map<string, int>::iterator itr;
-      for (itr = objects.begin(); itr != objects.end(); itr++) {
-        std::cout << itr->first << endl;
-      }
+      print_map_keys(objects);
       continue;
     }
 
     // print help message
     if (object == "help" || object == "h") {
       std::cout << "Usage: <object>\n";
+      std::cout << "Where object is one of the following:\n";
+      print_map_keys(objects);
       continue;
     }
 
     // make sure object is a known class
     if (objects.find(object) == objects.end()) {
       std::cout << "Unkown object type \"" << object << "\"\n";
+      std::cout << "Please pick from one of the following\n:";
+      print_map_keys(objects);
     }
     // found valid object
     else {
@@ -87,6 +77,41 @@ string parse(std::map<string, int> objects) {
     }
   } while (true);
 
-  return object;
+  Tuple *t = new Tuple;
+  t->object = object;
+  t->class_num = objects[object];
+  return t;
 }
 
+// print keys of given map
+void print_map_keys(std::map<std::string, int> map) {
+  std::map<std::string, int>::iterator itr;
+  for (itr = map.begin(); itr != map.end(); itr++) {
+    std::cout << itr->first << std::endl;
+  }
+}
+
+/* with help from 
+  https://stackoverflow.com/questions/289347/using-strtok-with-a-stdstring?utm
+  _medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa */
+void fill_map(std::map<std::string, int> *objects, std::string fname) {
+  // open file
+  std::ifstream in(fname);
+  if (in.is_open())
+  {
+    // get each line in infile
+    std::string line;
+    while (std::getline(in, line)) {
+      // tokenize each line into the object and class number associated with it
+      char object[MAX_LEN];
+      int class_num;
+      sscanf_s(line.c_str(), "%d,%s", &class_num, object, MAX_LEN);
+      // add it to objects map
+      (*objects)[object] = class_num;
+    }
+    in.close();
+  }
+  else {
+    std::cerr << "Unable to open " << fname << std::endl;
+  }
+}
