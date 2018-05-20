@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
-// returns std::std::string containing the object the user enters
+// returns Tuple containing the object the user enters and the class number associated with it
 Tuple *parse(std::map<std::string, int> objects) {
 
   // put input in object until user decides to quit
