@@ -9,7 +9,7 @@
 std::map<std::string, int> objects;
 
 typedef struct Tuple {
-  std::string object;
+  char object[MAX_LEN];
   int class_num;
 } Tuple;
 
@@ -27,13 +27,13 @@ int main(int argc, char *argv[]) {
     if (!t) {
       break;
     }
-    std::cout << "Object " << t->class_num << " has class #" << t->class_num << std::endl;
+    std::cout << "Object " << t->object << " has class #" << t->class_num << std::endl;
   } while (true); 
 
   return 0;
 }
 
-// returns Tuple containing the object the user enters and the class number associated with it
+// returns Tuple containing the object the user enters as well as the associated class number
 Tuple *parse(std::map<std::string, int> objects) {
 
   // put input in object until user decides to quit
@@ -77,8 +77,8 @@ Tuple *parse(std::map<std::string, int> objects) {
     }
   } while (true);
 
-  Tuple *t = new Tuple;
-  t->object = object;
+  Tuple *t = (Tuple *) malloc(sizeof(Tuple));
+  strncpy_s(t->object, MAX_LEN * sizeof(char), object.c_str(), _TRUNCATE);
   t->class_num = objects[object];
   return t;
 }
