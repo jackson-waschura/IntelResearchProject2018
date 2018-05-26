@@ -19,7 +19,13 @@ void fill_map(std::map<std::string, int> *objects, std::string fname);
 
 int main(int argc, char *argv[]) {
   // initialize objects (using pascal VOC)
-  fill_map(&objects, "classes.txt");
+  try {
+    fill_map(&objects, "pascal_classes.txt");
+  }
+  catch (std::exception& e) {
+    std::cout << e.what() << std::endl;
+    return 1;
+  }
 
   Tuple *t;
   do {
@@ -112,6 +118,6 @@ void fill_map(std::map<std::string, int> *objects, std::string fname) {
     in.close();
   }
   else {
-    std::cerr << "Unable to open " << fname << std::endl;
+    throw std::runtime_error("Unable to open file");
   }
 }
